@@ -1,6 +1,6 @@
 .svb-button {
   font-size: 12px;
-  line-height: 14px;
+  line-height: 20px;
   font-weight: 300;
   display: flex;
   align-items: center;
@@ -8,10 +8,10 @@
   padding: 4px 12px;
   border: 2px;
   border-style: solid;
-  border-color: #0078be;
+  border-color: #f3f4f6;
   position: relative;
-  background-color: #0078be;
-  color: #fff;
+  background-color: #f3f4f6;
+  color: #000000;
   border-radius: 2px;
   cursor: pointer;
   transition:
@@ -25,8 +25,8 @@
 }
 
 .svb-button--gray {
-  border-color: #cccccc;
-  background-color: #cccccc;
+  border-color: #e3e3e3;
+  background-color: #e3e3e3;
 }
 
 .svb-button--red {

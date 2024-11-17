@@ -14,19 +14,27 @@ export default class SvbTable {
         this.element = document.createElement('div');
         this.element.classList.add('svb-table-wrapper');
 
-        // Создание элекмента таблицы
+        // Создаем контейнер с фиксированной высотой и прокруткой
+        const tableContainer = document.createElement('div');
+
+        tableContainer.classList.add('table-container');
+
+        // Создаем элемент таблицы
         this.table = document.createElement('table');
         this.table.classList.add('svb-table');
 
-        // Добавление таблицы в обертку
-        this.element.appendChild(this.table);
+        // Добавляем таблицу в контейнер
+        tableContainer.appendChild(this.table);
+
+        // Добавляем контейнер в основной элемент
+        this.element.appendChild(tableContainer);
     }
 
     renderHeader() {
         const thead = document.createElement('thead');
         const tr = document.createElement('tr');
 
-        // Добавление ячейки с порядковым номером
+        // Добавляем ячейку для номера строки
         const thEnum = document.createElement('th');
 
         thEnum.textContent = '№';
@@ -36,18 +44,53 @@ export default class SvbTable {
         const settings = this.data.settings;
 
         columns.forEach((columnName) => {
-            if (columnName === 'uuid') return; // Пропустить колонку uuid
+            if (columnName === 'uuid') return; // Пропускаем колонку 'uuid'
 
             const th = document.createElement('th');
 
-            th.textContent = settings[columnName].represent;
             th.dataset.name = settings[columnName].name;
+
+            // Контейнер для содержимого заголовка
+            const headerContainer = document.createElement('div');
+
+            headerContainer.classList.add('header-container');
+
+            // Текст заголовка
+            const thText = document.createElement('span');
+
+            thText.textContent = settings[columnName].represent;
+            thText.classList.add('th-text');
+            headerContainer.appendChild(thText);
+
+            // Иконка блокировки
+            const lockIcon = document.createElement('span');
+
+            lockIcon.classList.add('icon', 'icon-lock');
+            lockIcon.innerHTML = '🔒';
+            headerContainer.appendChild(lockIcon);
+
+            // Иконка сортировки
+            const sortIcon = document.createElement('span');
+
+            sortIcon.classList.add('icon', 'icon-sort');
+            sortIcon.innerHTML = '🔛';
+            headerContainer.appendChild(sortIcon);
+
+            // Иконка фильтра
+            const filterIcon = document.createElement('span');
+
+            filterIcon.classList.add('icon', 'icon-filter');
+            filterIcon.innerHTML = '⚙️';
+            headerContainer.appendChild(filterIcon);
+
+            // Добавляем контейнер в ячейку заголовка
+            th.appendChild(headerContainer);
             tr.appendChild(th);
         });
 
         thead.appendChild(tr);
 
-        // Заменить существующий thead, если он есть
+        // Заменяем существующий thead, если он есть
         const existingThead = this.table.querySelector('thead');
 
         if (existingThead) {
@@ -66,22 +109,22 @@ export default class SvbTable {
 
             tr.dataset.uuid = uuid;
 
-            // Добавление ячейки с порядковым номером
+            // Добавляем ячейку для номера строки
             const tdEnum = document.createElement('td');
 
-            tdEnum.textContent = rowIndex + 1; // Счетчик текущего номера строки
+            tdEnum.textContent = rowIndex + 1; // Текущий номер строки
             tr.appendChild(tdEnum);
 
             rowData.forEach((cellData, index) => {
                 const columnName = this.data.columns[index];
 
-                if (columnName === 'uuid') return; // Пропустить колонку uuid
+                if (columnName === 'uuid') return; // Пропускаем колонку 'uuid'
 
                 const td = document.createElement('td');
 
                 td.dataset.name = columnName;
 
-                // Если данные в ячейке объект, содержащий значение и его представление
+                // Если cellData является объектом с 'r' (представление)
                 if (typeof cellData === 'object' && cellData !== null && cellData.r !== undefined) {
                     td.textContent = cellData.r;
                 } else {
@@ -94,7 +137,7 @@ export default class SvbTable {
             tbody.appendChild(tr);
         });
 
-        // Заменить существующий tbody, если он есть
+        // Заменяем существующий tbody, если он есть
         const existingTbody = this.table.querySelector('tbody');
 
         if (existingTbody) {
@@ -104,32 +147,51 @@ export default class SvbTable {
         }
     }
 
-    initEventListeners() {
-        // Подсветка строки при наведении
-        this.table.addEventListener('mouseover', (event) => {
-            const row = event.target.closest('tr');
+    renderFooter() {
+        const tfoot = document.createElement('tfoot');
+        const tr = document.createElement('tr');
 
-            if (row && row.parentNode.tagName === 'TBODY') {
-                row.classList.add('hover');
-            }
+        // Добавляем ячейку для номера строки (может быть пустой)
+        const tdEnum = document.createElement('td');
+
+        tdEnum.textContent = ''; // Или можно добавить общее число элементов
+        tr.appendChild(tdEnum);
+
+        const columns = this.data.columns;
+        const settings = this.data.settings;
+
+        columns.forEach((columnName) => {
+            if (columnName === 'uuid') return; // Пропускаем колонку 'uuid'
+
+            const td = document.createElement('td');
+
+            td.dataset.name = settings[columnName].name;
+
+            // Здесь вы можете добавить содержимое футера для каждой колонки
+            td.textContent = ''; // Или любые итоговые значения
+
+            tr.appendChild(td);
         });
 
-        this.table.addEventListener('mouseout', (event) => {
-            const row = event.target.closest('tr');
+        tfoot.appendChild(tr);
 
-            if (row && row.parentNode.tagName === 'TBODY') {
-                row.classList.remove('hover');
-            }
-        });
+        // Заменяем существующий tfoot, если он есть
+        const existingTfoot = this.table.querySelector('tfoot');
 
-        // Подсветка строки при клике
-        this.table.addEventListener('click', (event) => {
-            const row = event.target.closest('tr');
+        if (existingTfoot) {
+            this.table.replaceChild(tfoot, existingTfoot);
+        } else {
+            this.table.appendChild(tfoot);
+        }
+    }
 
-            if (row && row.parentNode.tagName === 'TBODY') {
-                this.setActiveRow(row);
-            }
-        });
+    loadRows(data) {
+        this.data = data;
+
+        // Рендеринг таблицы
+        this.renderHeader();
+        this.renderBody();
+        this.renderFooter();
     }
 
     setActiveRow(row) {
@@ -145,14 +207,6 @@ export default class SvbTable {
         return this.activeRow;
     }
 
-    loadRows(data) {
-        this.data = data;
-
-        // Отрисовка таблицы
-        this.renderHeader();
-        this.renderBody();
-    }
-
     addRow(rowData) {
         const tbody = this.table.querySelector('tbody');
         const tr = document.createElement('tr');
@@ -160,8 +214,8 @@ export default class SvbTable {
 
         tr.dataset.uuid = uuid;
 
-        // Добавление ячейки с порядковым номером
-        const rowCount = tbody.children.length + 1; // Полчение порядкового номера строки
+        // Добавляем ячейку для номера строки
+        const rowCount = tbody.children.length + 1; // Получаем текущий номер строки
         const tdEnum = document.createElement('td');
 
         tdEnum.textContent = rowCount;
@@ -196,7 +250,7 @@ export default class SvbTable {
             tbody.removeChild(row);
         }
 
-        // Пересчет порядковых номеров строк
+        // Пересчет номеров строк
         Array.from(tbody.children).forEach((row, index) => {
             row.firstChild.textContent = index + 1;
         });
@@ -230,123 +284,31 @@ export default class SvbTable {
         return null;
     }
 
-    renderHeader() {
-        const thead = document.createElement('thead');
-        const tr = document.createElement('tr');
+    initEventListeners() {
+    // Подсветка строки при наведении
+        this.table.addEventListener('mouseover', (event) => {
+            const row = event.target.closest('tr');
 
-        // Добавление ячейки с порядковым номером
-        const thEnum = document.createElement('th');
-
-        thEnum.textContent = '№';
-        tr.appendChild(thEnum);
-
-        const columns = this.data.columns;
-        const settings = this.data.settings;
-
-        columns.forEach((columnName) => {
-            if (columnName === 'uuid') return; // Пропустить колонку uuid
-
-            const th = document.createElement('th');
-
-            th.dataset.name = settings[columnName].name;
-
-            // Текст заголовка
-            const thText = document.createElement('span');
-
-            thText.textContent = settings[columnName].represent;
-            thText.classList.add('th-text');
-            th.appendChild(thText);
-
-            // Иконка
-            const thIcon = document.createElement('span');
-
-            thIcon.classList.add('th-icon');
-            thIcon.innerHTML = '⚙️'; // Замените на нужную иконку
-            th.appendChild(thIcon);
-
-            tr.appendChild(th);
+            if (row && row.parentNode.tagName === 'TBODY') {
+                row.classList.add('hover');
+            }
         });
 
-        thead.appendChild(tr);
+        this.table.addEventListener('mouseout', (event) => {
+            const row = event.target.closest('tr');
 
-        // Заменить существующий thead, если он есть
-        const existingThead = this.table.querySelector('thead');
-
-        if (existingThead) {
-            this.table.replaceChild(thead, existingThead);
-        } else {
-            this.table.appendChild(thead);
-        }
-    }
-
-    renderHeader() {
-        const thead = document.createElement('thead');
-        const tr = document.createElement('tr');
-
-        // Добавление ячейки с порядковым номером
-        const thEnum = document.createElement('th');
-
-        thEnum.textContent = '№';
-        tr.appendChild(thEnum);
-
-        const columns = this.data.columns;
-        const settings = this.data.settings;
-
-        columns.forEach((columnName) => {
-            if (columnName === 'uuid') return; // Пропустить колонку uuid
-
-            const th = document.createElement('th');
-
-            th.dataset.name = settings[columnName].name;
-
-            // Контейнер для содержимого заголовка
-            const headerContainer = document.createElement('div');
-
-            headerContainer.classList.add('header-container');
-
-            // Текст заголовка
-            const thText = document.createElement('span');
-
-            thText.textContent = settings[columnName].represent;
-            thText.classList.add('th-text');
-            headerContainer.appendChild(thText);
-
-            // Иконка блокировки
-            const lockIcon = document.createElement('span');
-
-            lockIcon.classList.add('icon', 'icon-lock');
-            lockIcon.innerHTML = '🔒'; // Замените на нужный символ или иконку
-            headerContainer.appendChild(lockIcon);
-
-            // Иконка сортировки
-            const sortIcon = document.createElement('span');
-
-            sortIcon.classList.add('icon', 'icon-sort');
-            sortIcon.innerHTML = '🔛'; // Замените на нужный символ или иконку
-            headerContainer.appendChild(sortIcon);
-
-            // Иконка фильтра
-            const filterIcon = document.createElement('span');
-
-            filterIcon.classList.add('icon', 'icon-filter');
-            filterIcon.innerHTML = '⚙️'; // Замените на нужный символ или иконку
-            headerContainer.appendChild(filterIcon);
-
-            // Добавление контейнера в заголовок
-            th.appendChild(headerContainer);
-            tr.appendChild(th);
+            if (row && row.parentNode.tagName === 'TBODY') {
+                row.classList.remove('hover');
+            }
         });
 
-        thead.appendChild(tr);
+        // Установка активной строки при клике
+        this.table.addEventListener('click', (event) => {
+            const row = event.target.closest('tr');
 
-        // Заменить существующий thead, если он есть
-        const existingThead = this.table.querySelector('thead');
-
-        if (existingThead) {
-            this.table.replaceChild(thead, existingThead);
-        } else {
-            this.table.appendChild(thead);
-        }
+            if (row && row.parentNode.tagName === 'TBODY') {
+                this.setActiveRow(row);
+            }
+        });
     }
-
 }

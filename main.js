@@ -4,7 +4,8 @@ import './src/scss/main.scss';
 
 const request = getList();
 const tableWrapper = document.querySelector('#table-wrapper');
-// Мок данные
+
+// Мок данных для новой строки
 const newRow = [
     'new-uuid-12345',
     '2024-12-01 10:00:00',
@@ -18,16 +19,77 @@ const newRow = [
     '120000',
     '15 d'
 ];
+
+// UUID строки, которую нужно удалить
 const uuidToRemove = '89326d90-fd15-4070-a8a0-538e2c9dd386';
 
 request.then((response) => {
-    request.then((response) => {
-        const svbTable = new SvbTable();
+    const svbTable = new SvbTable();
 
-        svbTable.loadRows(response);
-        svbTable.addRow(newRow);
-        svbTable.removeRow(uuidToRemove);
+    // Форматируем даты в данных перед загрузкой в таблицу
+    const formattedResponse = formatDataDates(response);
 
-        tableWrapper.appendChild(svbTable.element);
+    svbTable.loadRows(formattedResponse);
+
+    for (let i = 0; i < 20; i++) {
+        svbTable.addRow(formattedNewRow);
+    }
+
+    svbTable.removeRow(uuidToRemove);
+
+    tableWrapper.appendChild(svbTable.element);
+
+    // Пример использования метода getActiveRow
+    svbTable.table.addEventListener('click', () => {
+        const activeRow = svbTable.getActiveRow();
+
+        if (activeRow) {
+            console.log('Active Row UUID:', activeRow.dataset.uuid);
+        }
     });
-})
+});
+
+// Вспомогательная функция для форматирования даты
+function formatDate(dateString) {
+    // Проверяем, соответствует ли строка формату YYYY-MM-DD HH:MM:SS
+    const regex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+
+    if (regex.test(dateString)) {
+        const [datePart] = dateString.split(' ');
+        const [year, month, day] = datePart.split('-');
+
+        return `${day}.${month}.${year}`;
+    }
+
+    return dateString; // Возвращаем оригинальную строку, если она не является датой
+}
+
+// Функция для форматирования дат в данных
+function formatDataDates(data) {
+    const formattedData = { ...data };
+
+    formattedData.rows = data.rows.map((row) => {
+        return row.map((cell) => {
+            if (typeof cell === 'string') {
+                return formatDate(cell);
+            } else if (typeof cell === 'object' && cell !== null && cell.r) {
+                return { ...cell, r: formatDate(cell.r) };
+            } else {
+                return cell;
+            }
+        });
+    });
+
+    return formattedData;
+}
+
+// Форматируем даты в newRow перед добавлением
+const formattedNewRow = newRow.map((cell) => {
+    if (typeof cell === 'string') {
+        return formatDate(cell);
+    } else if (typeof cell === 'object' && cell !== null && cell.r) {
+        return { ...cell, r: formatDate(cell.r) };
+    } else {
+        return cell;
+    }
+});
